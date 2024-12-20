@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embed Game</title>
+  <style>
+    /* Ensures the container scales properly on all devices */
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000; /* Optional: Set a background color */
+    }
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="iframe-container">
+    <iframe 
+      src=" src="https://www.crazygames.com/embed/nuts-puzzle-sort-by-colo" 
+      allow="gamepad *;">
+      <!-- Fallback content for browsers that do not support iframes -->
+      Your browser does not support iframes. 
+      Please visit <a href="https://www.crazygames.com/game/battle-arena">CrazyGames</a> to play this game.
+    </iframe>
+  </div>
+</body>
+</html>
