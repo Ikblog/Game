@@ -1,46 +1,432 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Embed Game</title>
-  <style>
-    /* Ensures the container scales properly on all devices */
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #000; /* Optional: Set a background color */
-    }
-    .iframe-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      max-width: 100vw;
-      max-height: 100vh;
-      overflow: hidden;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuts Sorting Puzzle</title>
+    <style>
+        /* Previous styles remain the same until the buttons section */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 95%;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            height: 150px;
+            border: 3px solid #ccc;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .container.highlight {
+            border-color: #4CAF50 !important;
+            box-shadow: 0 0 10px rgba(74, 175, 80, 0.5);
+        }
+
+        .nut {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid rgba(0,0,0,0.2);
+        }
+
+        .nut:hover {
+            transform: scale(1.1);
+        }
+
+        .nuts-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            min-height: 100px;
+            background: #f8f8f8;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                height: 120px;
+            }
+            
+            .nut {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="iframe-container">
-    <iframe 
-      src=" src="https://www.crazygames.com/embed/magic-world" 
-      allow="gamepad *;">
-      <!-- Fallback content for browsers that do not support iframes -->
-      Your browser does not support iframes. 
-      Please visit <a href="https://www.crazygames.com/game/battle-arena">CrazyGames</a> to play this game.
-    </iframe>
-  </div>
+    <div class="game-container">
+        <div class="header">
+            <h1>Nuts Sorting Puzzle</h1>
+            <div class="stats">
+                <div>Level: <span id="level">1</span></div>
+                <div>Score: <span id="score">0</span></div>
+                <div class="timer" id="timer">Time: 60s</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+        <div class="nuts-area" id="nutsArea"></div>
+        <div class="game-board" id="gameBoard"></div>
+        <div class="controls">
+            <button id="resetBtn">Reset Level</button>
+        </div>
+    </div>
+
+    <div class="modal" id="levelCompleteModal">
+        <div class="modal-content">
+            <h2>Level Complete!</h2>
+            <p>Base Score: <span id="baseScore">0</span></p>
+            <p>Time Bonus: <span id="timeBonus">0</span></p>
+            <p>Total Score: <span id="levelScore">0</span></p>
+            <button onclick="nextLevel()">Next Level</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>Time's Up!</h2>
+            <p>Don't worry, try again!</p>
+            <button onclick="resetLevel()">Retry Level</button>
+        </div>
+    </div>
+
+    <script>
+        const colors = [
+            '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
+            '#FF00FF', '#00FFFF', '#FFA500', '#800080'
+        ];
+        
+        let currentLevel = 1;
+        let score = 0;
+        let selectedNut = null;
+        let timer = null;
+        let timeRemaining = 60;
+        let gameState = {
+            nuts: [],
+            containers: []
+        };
+
+        function getTimeLimit(level) {
+            return Math.max(60 - (level * 2), 20);
+        }
+
+        function updateTimer() {
+            timeRemaining--;
+            const timerElement = document.getElementById('timer');
+            const progressBar = document.getElementById('progressBar');
+            const timeLimit = getTimeLimit(currentLevel);
+            
+            timerElement.textContent = `Time: ${timeRemaining}s`;
+            progressBar.style.width = `${(timeRemaining / timeLimit) * 100}%`;
+
+            if (timeRemaining <= 10) {
+                timerElement.classList.add('warning');
+            }
+
+            if (timeRemaining <= 0) {
+                clearInterval(timer);
+                document.getElementById('gameOverModal').style.display = 'flex';
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const timeLimit = getTimeLimit(currentLevel);
+            timeRemaining = timeLimit;
+            updateTimer();
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function initializeGame() {
+            setupLevel(currentLevel);
+        }
+
+        function setupLevel(level) {
+            clearInterval(timer);
+            const numColors = Math.min(3 + Math.floor(level / 4), colors.length);
+            const nutsPerColor = Math.min(2 + Math.floor(level / 3), 5);
+
+            gameState.nuts = [];
+            gameState.containers = [];
+
+            for (let i = 0; i < numColors; i++) {
+                for (let j = 0; j < nutsPerColor; j++) {
+                    gameState.nuts.push({
+                        color: colors[i],
+                        id: `nut-${i}-${j}`
+                    });
+                }
+            }
+
+            gameState.nuts.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < numColors; i++) {
+                gameState.containers.push({
+                    color: colors[i],
+                    id: `container-${i}`,
+                    nuts: []
+                });
+            }
+
+            renderGame();
+            startTimer();
+        }
+
+        function renderGame() {
+            const nutsArea = document.getElementById('nutsArea');
+            nutsArea.innerHTML = '';
+            gameState.nuts.forEach(nut => {
+                const nutElement = document.createElement('div');
+                nutElement.className = 'nut';
+                nutElement.id = nut.id;
+                nutElement.style.backgroundColor = nut.color;
+                nutElement.onclick = () => selectNut(nut);
+                nutsArea.appendChild(nutElement);
+            });
+
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            gameState.containers.forEach(container => {
+                const containerElement = document.createElement('div');
+                containerElement.className = 'container';
+                containerElement.id = container.id;
+                containerElement.style.borderColor = container.color;
+                containerElement.onclick = () => placeNut(container);
+                gameBoard.appendChild(containerElement);
+            });
+
+            document.getElementById('level').textContent = currentLevel;
+            document.getElementById('score').textContent = score;
+        }
+
+        function selectNut(nut) {
+            if (selectedNut) {
+                document.getElementById(selectedNut.id).style.transform = 'scale(1)';
+            }
+            selectedNut = nut;
+            document.getElementById(nut.id).style.transform = 'scale(1.2)';
+            
+            // Highlight matching container
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.remove('highlight');
+                if (container.style.borderColor === nut.color) {
+                    container.classList.add('highlight');
+                }
+            });
+        }
+
+        function placeNut(container) {
+            if (!selectedNut) return;
+
+            const nutElement = document.getElementById(selectedNut.id);
+            const containerElement = document.getElementById(container.id);
+
+            containerElement.appendChild(nutElement);
+            nutElement.style.transform = 'scale(1)';
+
+            gameState.nuts = gameState.nuts.filter(n => n.id !== selectedNut.id);
+            container.nuts.push(selectedNut);
+            selectedNut = null;
+
+            // Remove container highlights
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.remove('highlight');
+            });
+
+            // Check solution after each placement
+            checkSolution();
+        }
+
+        function checkSolution() {
+            if (gameState.nuts.length > 0) return; // Don't check until all nuts are placed
+
+            let correct = true;
+            gameState.containers.forEach(container => {
+                container.nuts.forEach(nut => {
+                    if (nut.color !== container.color) {
+                        correct = false;
+                    }
+                });
+            });
+
+            if (correct) {
+                clearInterval(timer);
+                const baseScore = calculateBaseScore();
+                const timeBonus = calculateTimeBonus();
+                const levelScore = baseScore + timeBonus;
+                score += levelScore;
+                
+                document.getElementById('baseScore').textContent = baseScore;
+                document.getElementById('timeBonus').textContent = timeBonus;
+                document.getElementById('levelScore').textContent = levelScore;
+                document.getElementById('levelCompleteModal').style.display = 'flex';
+            }
+        }
+
+        function calculateBaseScore() {
+            return Math.floor(100 * (currentLevel / 2));
+        }
+
+        function calculateTimeBonus() {
+            const timeLimit = getTimeLimit(currentLevel);
+            return Math.floor(timeRemaining * (currentLevel * 5));
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel > 20) {
+                alert('Congratulations! You\'ve completed all levels!');
+                currentLevel = 1;
+                score = 0;
+            }
+            document.getElementById('levelCompleteModal').style.display = 'none';
+            setupLevel(currentLevel);
+        }
+
+        function resetLevel() {
+            document.getElementById('gameOverModal').style.display = 'none';
+            document.getElementById('timer').classList.remove('warning');
+            setupLevel(currentLevel);
+        }
+
+        document.getElementById('resetBtn').onclick = resetLevel;
+
+        // Initialize game
+        initializeGame();
+    </script>
 </body>
 </html>
-
-<iframe src="" style="width: 100%; height: 100%;" frameborder="0" allow="gamepad *;"></iframe>
