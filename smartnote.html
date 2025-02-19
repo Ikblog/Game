@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Notes Pro</title>
+    <style>
+        /* Previous styles remain the same */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body {
+            background: #0f0f1f;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            animation: slideDown 0.8s ease;
+        }
+
+        h1 {
+            color: #7c4dff;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(124, 77, 255, 0.4);
+            margin-bottom: 0.5rem;
+        }
+
+        .note-input {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .note-title-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #7c4dff;
+            border-radius: 10px;
+            padding: 0.8rem;
+            color: white;
+            font-size: 1.2rem;
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #7c4dff;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        .mic-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #7c4dff;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-btn.recording {
+            color: #ff4d4d;
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            font-size: 0.8rem;
+            color: #7c4dff;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #7c4dff 0%, #a174ff 100%);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff4d4d 0%, #ff7474 100%);
+            color: white;
+        }
+
+        .notes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .note-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-title {
+            color: #7c4dff;
+            font-size: 1.1rem;
+            margin-right: 1rem;
+        }
+
+        .note-date {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .note-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: rgba(255, 255, 255, 0.9);
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+
+        .note-card.expanded {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .note-card.expanded .note-content {
+            max-height: 500px;
+        }
+
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+
+        .note-card.expanded .chevron {
+            transform: rotate(180deg);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(124, 77, 255, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .button-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>SMART Note </h1>
+            <button class="add-btn" onclick="toggleEditor()">New Note</button>
+        </header>
+
+        <div class="note-input" id="editor" style="display: none;">
+            <div class="input-group">
+                <input type="text" class="note-title-input" id="noteTitle" placeholder="Note Title">
+                <div class="status-indicator" id="titleStatus"></div>
+                <button class="mic-btn" id="titleMic" onclick="toggleSpeechInput('title')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-group">
+                <textarea id="noteContent" placeholder="Write your content here..."></textarea>
+                <div class="status-indicator" id="contentStatus"></div>
+                <button class="mic-btn" id="contentMic" onclick="toggleSpeechInput('content')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="button-group">
+                <button class="add-btn" onclick="saveNote()">Save</button>
+                <button class="delete-btn" onclick="toggleEditor()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="notes-container" id="notesContainer"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // localStorage polyfill for WebView compatibility
+        if (typeof localStorage === 'undefined') {
+            var localStorage = {
+                _data: {},
+                setItem: function(id, val) { this._data[id] = String(val); },
+                getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : null; },
+                removeItem: function(id) { delete this._data[id]; },
+                clear: function() { this._data = {}; }
+            };
+        }
+
+        let editingNoteId = null;
+        let recognition = null;
+        let isRecording = false;
+        let currentInputField = null;
+
+        // Show toast message
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, duration);
+        }
+
+        // Update status indicator
+        function updateStatus(inputType, message) {
+            const status = document.getElementById(inputType + 'Status');
+            status.textContent = message;
+            setTimeout(() => {
+                status.textContent = '';
+            }, 2000);
+        }
+
+        // Initialize speech recognition with proper browser support
+        function initializeSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                showToast('Speech recognition is not supported in your browser');
+                return false;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US'; // You can make this configurable
+
+            recognition.onstart = () => {
+                isRecording = true;
+                updateStatus(currentInputField, 'Listening...');
+            };
+
+            recognition.onresult = (event) => {
+                const result = event.results[event.results.length - 1];
+                const transcript = result[0].transcript;
+                
+                if (result.isFinal) {
+                    if (currentInputField === 'title') {
+                        document.getElementById('noteTitle').value = transcript;
+                    } else {
+                        const textarea = document.getElementById('noteContent');
+                        const cursorPosition = textarea.selectionStart;
+                        const currentText = textarea.value;
+                        
+                        // Insert text at cursor position
+                        textarea.value = currentText.slice(0, cursorPosition) + 
+                                       transcript + ' ' + 
+                                       currentText.slice(cursorPosition);
+                        
+                        // Move cursor to end of inserted text
+                        textarea.selectionStart = cursorPosition + transcript.length + 1;
+                        textarea.selectionEnd = textarea.selectionStart;
+                    }
+                    updateStatus(currentInputField, 'Recorded!');
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                updateStatus(currentInputField, 'Error: ' + event.error);
+                stopRecording();
+            };
+
+            recognition.onend = () => {
+                stopRecording();
+            };
+
+            return true;
+        }
+
+        function toggleSpeechInput(inputType) {
+            if (!recognition && !initializeSpeechRecognition()) {
+                return;
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording(inputType);
+            }
+        }
+
+        function startRecording(inputType) {
+            if (isRecording) return;
+            
+            try {
+                currentInputField = inputType;
+                const micBtn = document.getElementById(inputType + 'Mic');
+                micBtn.classList.add('recording');
+                
+                // Request microphone permission
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(() => {
+                        recognition.start();
+                    })
+                    .catch((error) => {
+                        console.error('Microphone access denied:', error);
+                        showToast('Please allow microphone access to use speech-to-text');
+                        stopRecording();
+                    });
+            } catch (error) {
+                console.error('Speech recognition error:', error);
+                showToast('Error starting speech recognition');
+                stopRecording();
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            
+            const micBtns = document.querySelectorAll('.mic-btn');
+            micBtns.forEach(btn => btn.classList.remove('recording'));
+            
+            try {
+                recognition.stop();
+            } catch (error) {
+                console.error('Error stopping recognition:', error);
+            }
+            
+            isRecording = false;
+            currentInputField = null;
+            updateStatus('title', '');
+            updateStatus('content', '');
+        }
+
+        // Rest of the code remains the same
+        function toggleEditor() {
+            const editor = document.getElementById('editor');
+            editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
+            editor.style.display === 'block' 
+                ? document.getElementById('noteTitle').focus()
+                : clearEditor();
+        }
+
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            
+            if (!title || !content) {
+                showToast('Please fill both title and content');
+                return;
+            }
+
+            const note = {
+                id: editingNoteId || Date.now(),
+                title,
+                content,
+                date: new Date().toLocaleString()
+            };
+
+            const notes = JSON.parse(localStorage.getItem('notes') || '
